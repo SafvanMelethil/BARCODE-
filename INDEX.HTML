@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Zone Barcode Label Generator (3x6 PDF)</title>
+
+  <!-- JsBarcode for barcodes -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <!-- jsPDF for PDF generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f4f4f4;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    textarea {
+      width: 100%;
+      height: 120px;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #aaa;
+      font-size: 14px;
+      resize: vertical;
+    }
+
+    .buttons {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 10px 18px;
+      background: #111827;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-generate {
+      background: #111827;
+    }
+
+    .btn-download {
+      background: #16a34a;
+    }
+
+    .btn-clear {
+      background: #6b7280;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 8px;
+    }
+
+    .preview-title {
+      margin-top: 18px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .preview-wrapper {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .barcode-card {
+      padding: 10px;
+      display: inline-block;
+      background: #ffffff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      min-width: 220px;
+    }
+
+    .label-layout {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .zone-block {
+      flex: 0 0 30%;
+      border-right: 1px solid #ddd;
+      padding-right: 8px;
+    }
+
+    .zone-title {
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .zone-code {
+      font-size: 20px;
+      font-weight: 800;
+      margin-top: 4px;
+    }
+
+    .right-block {
+      flex: 1;
+      text-align: center;
+    }
+
+    .loc-code {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 4px;
+      letter-spacing: 0.08em;
+    }
+
+    .barcode-canvas {
+      display: block;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h2>Zone Barcode Label Generator (3 × 6 PDF)</h2>
+    <p>Enter one per line as: <b>ZONE LOCATION</b></p>
+    <p style="font-size:12px;color:#4b5563;margin-top:-6px;">
+      Example: <code>A01 R01-001</code> → Zone = A01, Location = R01-001 (barcode = R01-001 only)
+    </p>
+
+    <textarea id="codesInput" placeholder="A01 R01-001
+A01 R01-002
+B02 R05-010"></textarea>
+
+    <div class="buttons">
+      <button class="btn-generate" onclick="generate()">Generate Preview</button>
+      <button id="downloadBtn" class="btn-download" onclick="downloadPDF()" disabled>Download PDF (3 × 6)</button>
+      <button class="btn-clear" onclick="clearAll()">Clear</button>
+    </div>
+
+    <div class="hint">
+      ✅ Barcode type: CODE128 (scanner reads only the location, e.g. <b>R01-001</b>).<br>
+      ✅ PDF layout: 3 columns × 7 rows per page (18 labels).<br>
+      ✅ Label style: left “Zone” + zone code, right centered location and centered barcode.
+    </div>
+
+    <div id="outputSection" style="display:none;">
+      <div class="preview-title">Preview:</div>
+      <div id="output" class="preview-wrapper"></div>
+    </div>
+  </div>
+
+  <script>
+    let currentLabels = []; // { zone, location }
+
+    function generate() {
+      const lines = document.getElementById("codesInput").value
+        .split("\n")
+        .map(l => l.trim())
+        .filter(l => l.length > 0);
+
+      const output = document.getElementById("output");
+      output.innerHTML = "";
+      currentLabels = [];
+
+      if (lines.length === 0) {
+        alert("Please enter at least one line: ZONE LOCATION");
+        document.getElementById("downloadBtn").disabled = true;
+        document.getElementById("outputSection").style.display = "none";
+        return;
+      }
+
+      lines.forEach(line => {
+        const parts = line.split(/\s+/).filter(Boolean);
+        if (parts.length < 2) return;
+
+        const zone = parts[0];
+        const location = parts.slice(1).join(" ");
+
+        currentLabels.push({ zone, location });
+
+        // PREVIEW CARD (for screen only)
+        const card = document.createElement("div");
+        card.className = "barcode-card";
+
+        const layout = document.createElement("div");
+        layout.className = "label-layout";
+
+        const zoneBlock = document.createElement("div");
+        zoneBlock.className = "zone-block";
+
+        const zoneTitle = document.createElement("div");
+        zoneTitle.className = "zone-title";
+        zoneTitle.textContent = "Zone";
+
+        const zoneCode = document.createElement("div");
+        zoneCode.className = "zone-code";
+        zoneCode.textContent = zone;
+
+        zoneBlock.appendChild(zoneTitle);
+        zoneBlock.appendChild(zoneCode);
+
+        const rightBlock = document.createElement("div");
+        rightBlock.className = "right-block";
+
+        const locCode = document.createElement("div");
+        locCode.className = "loc-code";
+        locCode.textContent = location;
+
+        const canvas = document.createElement("canvas");
+        canvas.className = "barcode-canvas";
+
+        JsBarcode(canvas, location, {
+          format: "CODE128",
+          displayValue: false,
+          margin: 5,
+          width: 2.2,
+          height: 60,
+          lineColor: "#000000",
+          background: "#ffffff"
+        });
+
+        rightBlock.appendChild(locCode);
+        rightBlock.appendChild(canvas);
+
+        layout.appendChild(zoneBlock);
+        layout.appendChild(rightBlock);
+        card.appendChild(layout);
+        output.appendChild(card);
+      });
+
+      if (currentLabels.length === 0) {
+        alert("No valid lines found. Use format: ZONE LOCATION (e.g., A01 R01-001)");
+        document.getElementById("downloadBtn").disabled = true;
+        document.getElementById("outputSection").style.display = "none";
+        return;
+      }
+
+      document.getElementById("downloadBtn").disabled = false;
+      document.getElementById("outputSection").style.display = "block";
+    }
+
+    function clearAll() {
+      document.getElementById("codesInput").value = "";
+      document.getElementById("output").innerHTML = "";
+      document.getElementById("downloadBtn").disabled = true;
+      document.getElementById("outputSection").style.display = "none";
+      currentLabels = [];
+    }
+
+    function downloadPDF() {
+      if (!currentLabels || currentLabels.length === 0) {
+        alert("No labels generated yet. Please click 'Generate Preview' first.");
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4"
+      });
+
+      const cols = 3;
+      const rows = 7;
+      const labelsPerPage = cols * rows;
+
+      const labelWidth = 60;   // mm
+      const labelHeight = 40;  // mm
+      const marginLeft = 10;   // mm
+      const marginTop = 10;    // mm
+
+      const zoneWidth = 18;    // left block width in mm
+
+      const canvases = Array.from(document.querySelectorAll(".barcode-canvas"));
+
+      currentLabels.forEach((label, index) => {
+        const pageIndex = Math.floor(index / labelsPerPage);
+        const indexInPage = index % labelsPerPage;
+
+        if (index > 0 && indexInPage === 0) {
+          doc.addPage();
+        }
+
+        const col = indexInPage % cols;
+        const row = Math.floor(indexInPage / cols);
+
+        const x = marginLeft + col * labelWidth;
+        const y = marginTop + row * labelHeight;
+
+        const zone = label.zone;
+        const location = label.location;
+        const canvas = canvases[index];
+
+        // Outer border
+        doc.setDrawColor(180);
+        doc.rect(x, y, labelWidth, labelHeight);
+
+        // Left: Zone block
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8);
+        doc.text("Zone", x + 3, y + 7);
+
+        doc.setFontSize(12);
+        doc.text(zone, x + 3, y + 18);
+
+        // Right block geometry
+        const xRight = x + zoneWidth;
+        const rightWidth = labelWidth - zoneWidth;
+
+        // Location text – centered in right block
+        doc.setFontSize(14);
+        const locCenterX = xRight + rightWidth / 2;
+        doc.text(location, locCenterX, y + 10, { align: "center" });
+
+        // Barcode – centered under location, same width for all
+        if (canvas) {
+          const imgData = canvas.toDataURL("image/png");
+
+          const barcodeMargin = 2;
+          const barcodeX = xRight + barcodeMargin;
+          const barcodeY = y + 16;
+          const barcodeW = rightWidth - barcodeMargin * 2;
+          const barcodeH = labelHeight - 22;
+
+          doc.addImage(imgData, "PNG", barcodeX, barcodeY, barcodeW, barcodeH);
+        }
+      });
+
+      doc.save("zone_barcodes_3x6.pdf");
+    }
+  </script>
+</body>
+</html>
