@@ -2,379 +2,214 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Zone Barcode Sticker Printer (70×30 mm)</title>
+  <title>BIG ZONE + BIG BIN Barcode Stickers (70×30mm)</title>
+
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
-    * {
-      box-sizing: border-box;
-      font-family: Arial, sans-serif;
-    }
-
     body {
       margin: 0;
       padding: 20px;
-      background: #f4f4f4;
+      background: #f0f0f0;
+      font-family: Arial, sans-serif;
     }
 
-    .app {
+    .container {
       max-width: 900px;
-      margin: 0 auto;
-      background: #ffffff;
+      margin: auto;
+      background: white;
       padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-
-    h1 {
-      margin: 0 0 6px;
-      font-size: 20px;
-    }
-
-    .subtitle {
-      font-size: 13px;
-      color: #4b5563;
-      margin-bottom: 12px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
     }
 
     textarea {
       width: 100%;
-      height: 120px;
-      padding: 8px;
-      border-radius: 6px;
+      height: 140px;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 8px;
       border: 1px solid #aaa;
-      font-size: 14px;
       resize: vertical;
     }
 
-    .buttons {
-      margin-top: 10px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
     button {
-      padding: 8px 16px;
-      border-radius: 6px;
+      padding: 10px 18px;
+      margin-top: 12px;
       border: none;
-      font-size: 13px;
-      font-weight: 600;
+      border-radius: 6px;
+      background: #0f172a;
+      font-size: 14px;
+      font-weight: bold;
+      color: white;
       cursor: pointer;
-      color: #fff;
-      background: #111827;
     }
 
-    .btn-print {
-      background: #16a34a;
-    }
-
-    button:disabled {
-      opacity: .5;
-      cursor: not-allowed;
-    }
-
-    .hint {
-      font-size: 12px;
-      color: #6b7280;
-      margin-top: 8px;
-    }
-
-    /* Screen preview */
-    .preview-wrapper {
-      margin-top: 16px;
+    #preview {
+      margin-top: 20px;
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 15px;
     }
 
-    .preview-label {
-      width: 280px;
-      border: 1px solid #d4d4d4;
-      border-radius: 6px;
-      padding: 6px;
-      background: #fff;
-    }
-
-    .label-inner {
+    .label {
+      width: 290px;
+      height: 125px;
+      border: 1px dashed #ccc;
+      background: white;
       display: flex;
       align-items: center;
-      gap: 8px;
+      padding: 5px;
     }
 
-    .zone-block {
-      flex: 0 0 30%;
+    .left {
+      width: 32%;
+      text-align: center;
       border-right: 1px solid #ddd;
-      padding-right: 6px;
+      padding-right: 8px;
     }
 
-    .zone-title {
-      font-size: 11px;
-      font-weight: 600;
+    .left-title {
+      font-size: 15px;
+      font-weight: 900;
     }
 
-    .zone-code {
-      font-size: 18px;
-      font-weight: 800;
+    .left-zone {
+      font-size: 32px;      /* MUCH BIGGER */
+      font-weight: 900;
       margin-top: 3px;
     }
 
-    .right-block {
-      flex: 1;
+    .right {
+      width: 68%;
       text-align: center;
+      padding-left: 8px;
     }
 
-    .loc-code {
-      font-size: 16px;
-      font-weight: 800;
-      margin-bottom: 2px;
-      letter-spacing: 0.07em;
+    .bin {
+      font-size: 26px;      /* MUCH BIGGER */
+      font-weight: 900;
+      margin-bottom: 6px;
+      letter-spacing: 0.04em;
     }
 
-    .barcode {
+    .bar-prev {
       width: 100%;
-      height: 30px;
-    }
-
-    /* PRINT SETTINGS */
-    @page {
-      size: 70mm 30mm;
-      margin: 0;
-    }
-
-    @media screen {
-      #printArea {
-        display: none;
-      }
-    }
-
-    @media print {
-      body {
-        margin: 0;
-        padding: 0;
-        background: #fff;
-      }
-      .app {
-        display: none;       /* hide UI in print */
-      }
-      #printArea {
-        display: block;      /* only printArea is visible */
-      }
-
-      .print-label {
-        width: 70mm;
-        height: 30mm;
-        padding: 2mm 3mm;
-        display: flex;
-        align-items: center;
-        border: 0.1mm solid #000; /* remove if you don't want a box */
-        page-break-after: always; /* EACH PAGE = ONE STICKER */
-      }
-
-      .print-zone-block {
-        flex: 0 0 22mm;
-        border-right: 0.1mm solid #000;
-        padding-right: 2mm;
-      }
-
-      .print-zone-title {
-        font-size: 6pt;
-        font-weight: 600;
-      }
-
-      .print-zone-code {
-        font-size: 11pt;
-        font-weight: 800;
-        margin-top: 1mm;
-      }
-
-      .print-right-block {
-        flex: 1;
-        text-align: center;
-        padding-left: 2mm;
-      }
-
-      .print-loc-code {
-        font-size: 9pt;
-        font-weight: 800;
-        letter-spacing: 0.06em;
-        margin-bottom: 1mm;
-      }
-
-      .print-barcode {
-        width: 100%;
-        height: 14mm;
-      }
+      height: 40px;  /* slightly bigger barcode */
     }
   </style>
 </head>
 <body>
-  <div class="app">
-    <h1>Zone Barcode Sticker Printer (70 × 30 mm)</h1>
-    <div class="subtitle">
-      Enter one per line as: <b>ZONE LOCATION</b><br>
-      Example: <code>A01 R01-001</code> → Zone = A01, Location = R01-001 (barcode = R01-001 only)
-    </div>
 
-    <textarea id="codesInput" placeholder="A01 R01-001
+<div class="container">
+  <h2>70 × 30 mm — EXTRA LARGE TEXT + BARCODE</h2>
+
+  <textarea id="input" placeholder="A01 R01-001
 A01 R01-002
-B02 R05-010"></textarea>
+B08 R05-010"></textarea>
 
-    <div class="buttons">
-      <button onclick="generateLabels()">Generate Labels</button>
-      <button id="printBtn" class="btn-print" onclick="printStickers()" disabled>Print Stickers</button>
-    </div>
+  <button onclick="generate()">Generate Preview</button>
+  <button id="downloadBtn" onclick="downloadPDF()" disabled>Download 70×30 PDF</button>
 
-    <div class="hint">
-      🔹 Printer: choose your sticker printer.<br>
-      🔹 Paper size: <b>70mm × 30mm</b>, margins = None, scale = 100%.<br>
-      🔹 After clicking <b>Print Stickers</b>, you MUST see each label in the print preview (one per page).
-    </div>
+  <div id="preview"></div>
+</div>
 
-    <div id="preview" class="preview-wrapper"></div>
-  </div>
+<script>
+let labels = [];
 
-  <!-- This is what actually gets printed -->
-  <div id="printArea"></div>
+function generate() {
+  const lines = document.getElementById("input").value.trim().split("\n");
+  labels = [];
+  document.getElementById("preview").innerHTML = "";
+  document.getElementById("downloadBtn").disabled = false;
 
-  <script>
-    let currentLabels = []; // { zone, location }
+  lines.forEach(line => {
+    let parts = line.trim().split(/\s+/);
+    if (parts.length < 2) return;
 
-    function parseInput() {
-      const lines = document.getElementById("codesInput").value
-        .split("\n")
-        .map(l => l.trim())
-        .filter(l => l.length > 0);
+    let zone = parts[0];
+    let bin = parts.slice(1).join(" ");
 
-      const labels = [];
-      lines.forEach(line => {
-        const parts = line.split(/\s+/).filter(Boolean);
-        if (parts.length < 2) return;
-        const zone = parts[0];
-        const location = parts.slice(1).join(" ");
-        labels.push({ zone, location });
-      });
-      return labels;
-    }
+    labels.push({ zone, bin });
 
-    function generateLabels() {
-      const labels = parseInput();
-      const preview = document.getElementById("preview");
-      const printArea = document.getElementById("printArea");
-      preview.innerHTML = "";
-      printArea.innerHTML = "";
-      currentLabels = labels;
+    let card = document.createElement("div");
+    card.className = "label";
 
-      if (!labels.length) {
-        alert("Please enter at least one line in format: ZONE LOCATION");
-        document.getElementById("printBtn").disabled = true;
-        return;
-      }
+    let left = document.createElement("div");
+    left.className = "left";
+    left.innerHTML = `<div class='left-title'>Zone</div><div class='left-zone'>${zone}</div>`;
 
-      // ----- Screen preview -----
-      labels.forEach(lbl => {
-        const card = document.createElement("div");
-        card.className = "preview-label";
+    let right = document.createElement("div");
+    right.className = "right";
+    right.innerHTML = `<div class='bin'>${bin}</div>`;
 
-        const inner = document.createElement("div");
-        inner.className = "label-inner";
+    let barcode = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    barcode.classList.add("bar-prev");
+    right.appendChild(barcode);
 
-        const zoneBlock = document.createElement("div");
-        zoneBlock.className = "zone-block";
+    card.appendChild(left);
+    card.appendChild(right);
 
-        const zt = document.createElement("div");
-        zt.className = "zone-title";
-        zt.textContent = "Zone";
+    document.getElementById("preview").appendChild(card);
 
-        const zc = document.createElement("div");
-        zc.className = "zone-code";
-        zc.textContent = lbl.zone;
+    JsBarcode(barcode, bin, {
+      format: "CODE128",
+      displayValue: false,
+      width: 1.3,
+      height: 40,
+      margin: 0
+    });
+  });
+}
 
-        zoneBlock.appendChild(zt);
-        zoneBlock.appendChild(zc);
+async function downloadPDF() {
+  const { jsPDF } = window.jspdf;
 
-        const rightBlock = document.createElement("div");
-        rightBlock.className = "right-block";
+  const doc = new jsPDF({
+    orientation: "landscape",
+    unit: "mm",
+    format: [70, 30]
+  });
 
-        const lc = document.createElement("div");
-        lc.className = "loc-code";
-        lc.textContent = lbl.location;
+  const canvas = document.createElement("canvas");
+  canvas.width = 500;
+  canvas.height = 120;
+  const ctx = canvas.getContext("2d");
 
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.classList.add("barcode");
+  labels.forEach((lbl, i) => {
+    if (i > 0) doc.addPage([70, 30], "landscape");
 
-        rightBlock.appendChild(lc);
-        rightBlock.appendChild(svg);
+    ctx.clearRect(0, 0, 500, 120);
+    JsBarcode(canvas, lbl.bin, {
+      format: "CODE128",
+      displayValue: false,
+      width: 2,
+      height: 70,
+      margin: 0
+    });
 
-        inner.appendChild(zoneBlock);
-        inner.appendChild(rightBlock);
-        card.appendChild(inner);
-        preview.appendChild(card);
+    const barcodeImg = canvas.toDataURL("image/png");
 
-        JsBarcode(svg, lbl.location, {
-          format: "CODE128",
-          displayValue: false,
-          margin: 0,
-          width: 1.6,
-          height: 40
-        });
-      });
+    /* LEFT SIDE – Zone */
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("Zone", 4, 7);
 
-      // ----- Real print labels -----
-      labels.forEach(lbl => {
-        const labelDiv = document.createElement("div");
-        labelDiv.className = "print-label";
+    doc.setFontSize(22);     /* Bigger zone code */
+    doc.text(lbl.zone, 4, 20);
 
-        const zoneBlock = document.createElement("div");
-        zoneBlock.className = "print-zone-block";
+    /* RIGHT SIDE – Bin */
+    doc.setFontSize(16);     /* Bigger BIN code */
+    doc.text(lbl.bin, 52, 9, { align: "center" });
 
-        const zt = document.createElement("div");
-        zt.className = "print-zone-title";
-        zt.textContent = "Zone";
+    /* Barcode Area */
+    doc.addImage(barcodeImg, "PNG", 26, 11, 42, 15);
+  });
 
-        const zc = document.createElement("div");
-        zc.className = "print-zone-code";
-        zc.textContent = lbl.zone;
+  doc.save("stickers_70x30_big.pdf");
+}
+</script>
 
-        zoneBlock.appendChild(zt);
-        zoneBlock.appendChild(zc);
-
-        const rightBlock = document.createElement("div");
-        rightBlock.className = "print-right-block";
-
-        const lc = document.createElement("div");
-        lc.className = "print-loc-code";
-        lc.textContent = lbl.location;
-
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.classList.add("print-barcode");
-
-        rightBlock.appendChild(lc);
-        rightBlock.appendChild(svg);
-
-        labelDiv.appendChild(zoneBlock);
-        labelDiv.appendChild(rightBlock);
-        printArea.appendChild(labelDiv);
-
-        JsBarcode(svg, lbl.location, {
-          format: "CODE128",
-          displayValue: false,
-          margin: 0,
-          width: 1.1,
-          height: 40
-        });
-      });
-
-      document.getElementById("printBtn").disabled = false;
-    }
-
-    function printStickers() {
-      if (!currentLabels.length) {
-        alert("Generate labels first.");
-        return;
-      }
-      window.print();
-    }
-  </script>
 </body>
 </html>
